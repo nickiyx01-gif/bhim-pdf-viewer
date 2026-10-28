@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bhim PDF Viewer</title>
+  <style>
+    :root{
+      --bg:#f3f6ff;--card:#ffffff;--ink:#17213b;--muted:#66718a;
+      --blue:#3157d5;--purple:#7548d8;--line:#e4e9f5;--soft:#edf1ff;
+      --shadow:0 18px 45px rgba(35,55,120,.10);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);background:
+      radial-gradient(circle at 8% 5%,#e2e9ff 0,transparent 28%),
+      radial-gradient(circle at 95% 15%,#f0e6ff 0,transparent 25%),var(--bg)}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+    .topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(255,255,255,.88);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;backdrop-filter:blur(14px)}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.4px}
+    .logo{width:43px;height:43px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--purple));display:grid;place-items:center;color:white;font-size:20px;box-shadow:0 8px 20px #3157d540}
+    .brand small{display:block;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:1.5px;margin-top:3px}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .pill{border:1px solid var(--line);background:white;border-radius:999px;padding:10px 15px;color:var(--ink);font-weight:700}
+    .primary{border:0;background:linear-gradient(135deg,var(--blue),var(--purple));color:white;border-radius:12px;padding:12px 17px;font-weight:800;box-shadow:0 8px 18px #3157d52b}
+    .outline{border:1px solid #d7def2;background:white;color:var(--blue);border-radius:12px;padding:11px 15px;font-weight:750}
+    main{max-width:1180px;margin:auto;padding:32px 24px 70px}
+    .hero{background:linear-gradient(120deg,#172b69,#3157d5 58%,#7851d7);border-radius:28px;padding:36px;color:white;display:grid;grid-template-columns:1.3fr .7fr;gap:22px;align-items:center;box-shadow:0 22px 50px #273e9a2b;overflow:hidden;position:relative}
+    .hero:after{content:"";position:absolute;width:280px;height:280px;border:42px solid #ffffff12;border-radius:50%;right:-40px;top:-100px}
+    .eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:850;color:#dce4ff}
+    h1{font-size:clamp(30px,4vw,48px);line-height:1.08;margin:13px 0}
+    .hero p{color:#e0e7ff;line-height:1.7;max-width:560px;margin:0}
+    .hero-art{min-height:170px;display:grid;place-items:center;position:relative;z-index:1}
+    .document-stack{position:relative;width:190px;height:160px}
+    .sheet{position:absolute;width:112px;height:142px;background:#fff;border-radius:13px;box-shadow:0 14px 25px #101c5130;padding:17px;color:#3157d5}
+    .sheet.back{transform:rotate(12deg);left:64px;top:4px;background:#dce4ff}
+    .sheet.front{transform:rotate(-7deg);left:28px;top:10px}
+    .sheet .big{font-size:34px;font-weight:900}.sheet .line{height:5px;background:#dce3f8;border-radius:9px;margin-top:10px}
+    .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:32px 0 17px}
+    h2{margin:0;font-size:23px;letter-spacing:-.5px}.sub{color:var(--muted);margin:7px 0 0;font-size:14px}
+    .search{display:flex;gap:10px;max-width:430px;width:100%;background:white;border:1px solid var(--line);border-radius:14px;padding:6px 8px 6px 14px;box-shadow:0 5px 18px #23376d08}
+    .search input{border:0;outline:0;min-width:0;flex:1;background:transparent}
+    .filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px}
+    .filter{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:white;color:var(--muted);font-weight:750}
+    .filter.active{background:var(--soft);color:var(--blue);border-color:#cdd7ff}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+    .file-card{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:17px;box-shadow:0 9px 25px #1e326c08;transition:.2s}
+    .file-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+    .file-preview{height:145px;border-radius:14px;background:linear-gradient(135deg,#f1f4ff,#e6eaff);display:grid;place-items:center;position:relative;overflow:hidden}
+    .pdf-icon{width:76px;height:94px;background:white;border-radius:10px;box-shadow:0 10px 20px #1c347d18;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#e04b5a;font-weight:900;border:1px solid #e8ecf7}
+    .pdf-icon span{font-size:25px}.pdf-icon small{font-size:10px;letter-spacing:1px;margin-top:5px}
+    .photo-preview{width:100%;height:100%;display:grid;place-items:center;font-size:52px;background:linear-gradient(135deg,#d9f4ed,#e5e2ff)}
+    .type-tag{position:absolute;top:10px;left:10px;background:#ffffffdf;border:1px solid #ffffff;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900;color:#52607f;letter-spacing:.7px}
+    .file-meta{display:flex;align-items:center;gap:12px;margin:15px 0 13px}
+    .mini-icon{width:39px;height:42px;border-radius:10px;background:#fff0f1;display:grid;place-items:center;color:#e04b5a;font-size:12px;font-weight:900;flex-shrink:0}
+    .mini-icon.img{background:#e8f8f2;color:#159a77}
+    .file-meta h3{font-size:15px;margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .file-meta p{font-size:12px;color:var(--muted);margin:0}
+    .card-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eef1f8;padding-top:13px}
+    .views{font-size:12px;color:var(--muted)}
+    .view-btn{background:var(--soft);color:var(--blue);border:0;border-radius:10px;padding:10px 13px;font-weight:850}
+    .notice{margin-top:25px;background:#fff8e8;border:1px solid #f5e6bd;border-radius:15px;padding:14px 16px;color:#765a1a;font-size:13px;line-height:1.6}
+    footer{padding:24px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--line);background:#ffffff90}
+    .modal-wrap{position:fixed;inset:0;background:#111a36a8;z-index:30;display:grid;place-items:center;padding:18px;backdrop-filter:blur(6px)}
+    .modal{width:min(500px,100%);background:white;border-radius:24px;padding:28px;box-shadow:0 30px 90px #0c153b55;position:relative}
+    .modal h2{font-size:25px;margin:12px 0 8px}.modal p{color:var(--muted);line-height:1.6;font-size:14px}
+    .field{display:block;margin:17px 0 0;font-weight:750;font-size:13px}
+    .field input{display:block;width:100%;padding:13px 14px;border:1px solid #dfe5f3;border-radius:12px;margin-top:8px;outline:none}
+    .field input:focus{border-color:#7189ee;box-shadow:0 0 0 3px #3157d51a}
+    .wide{width:100%;margin-top:20px;padding:14px}
+    .fineprint{font-size:11px!important;color:#7c879f!important}
+    .viewer-modal{width:min(900px,100%);max-height:92vh;overflow:auto}
+    .viewer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .close{border:0;background:#f0f2fa;border-radius:10px;padding:9px 12px;font-weight:900;color:#455170}
+    .viewer-canvas{margin-top:18px;min-height:300px;border-radius:15px;background:#eef2fc;display:grid;place-items:center;padding:18px;text-align:center}
+    .demo-page{width:min(430px,100%);min-height:430px;background:white;box-shadow:0 8px 25px #24356817;padding:35px;text-align:left;border-radius:5px}
+    .demo-page h3{text-align:center;color:#284cae;margin-top:8px}
+    .demo-page p{color:#4c5874;line-height:1.8}
+    .viewer-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:15px}
+    .admin-panel{background:white;border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:20px}
+    .admin-panel input{padding:11px;border:1px solid var(--line);border-radius:10px;max-width:100%}
+    .admin-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px}
+    .empty{grid-column:1/-1;text-align:center;background:white;border:1px dashed #cbd4ec;border-radius:18px;padding:40px;color:var(--muted)}
+    @media(max-width:800px){.hero{grid-template-columns:1fr;padding:27px}.hero-art{display:none}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.section-head{align-items:stretch;flex-direction:column}.topbar{padding:0 4%;height:68px}.top-actions .pill{display:none}}
+    @media(max-width:540px){main{padding:20px 14px 45px}.grid{grid-template-columns:1fr}.file-preview{height:165px}.brand{font-size:14px}.logo{width:38px;height:38px}.hero{border-radius:21px}.hero p{font-size:14px}.section-head{margin-top:25px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="logo">B</div><div>BHIM PDF VIEWER<small>LEARN • READ • GROW</small></div></div>
+    <div class="top-actions">
+      <span class="pill" id="visitorBadge">Guest Viewer</span>
+      <button class="outline" id="loginTopBtn">Visitor Login</button>
+      <button class="primary" id="adminTopBtn">Admin Demo</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Your digital study library</div>
+        <h1>Read. Learn.<br>Move Forward.</h1>
+        <p>Study PDFs and educational photos in one place. Open a resource, read it online, and keep learning from any device.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+          <button class="primary" onclick="document.getElementById('library').scrollIntoView({behavior:'smooth'})">Explore Library ↓</button>
+          <button class="outline" style="background:#ffffff15;color:white;border-color:#ffffff50" id="heroLoginBtn">Enter as Visitor</button>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="document-stack"><div class="sheet back"><div class="big">IMG</div><div class="line"></div><div class="line"></div><div class="line" style="width:65%"></div></div><div class="sheet front"><div class="big">PDF</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line" style="width:60%"></div></div></div>
+      </div>
+    </section>
+
+    <section id="library">
+      <div class="section-head">
+        <div><h2>Study Library</h2><p class="sub">Browse available documents and photos.</p></div>
+        <label class="search"><span>⌕</span><input id="searchInput" placeholder="Search files by name..." /><button class="primary" style="padding:9px 13px" id="searchBtn">Search</button></label>
+      </div>
+      <div class="filters">
+        <button class="filter active" data-filter="all">All Resources</button>
+        <button class="filter" data-filter="pdf">PDF Documents</button>
+        <button class="filter" data-filter="image">Photos</button>
+      </div>
+      <div class="grid" id="fileGrid"></div>
+      <div class="notice"><strong>Viewer-only concept:</strong> this prototype does not show Download or Print buttons. A real website also needs secure file delivery; hiding buttons alone cannot completely prevent copying or screenshots.</div>
+      <section class="admin-panel hidden" id="adminPanel">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <div><h2>Admin Panel (Demo)</h2><p class="sub">Add a sample card to preview the library layout.</p></div>
+          <button class="outline" id="adminLogoutBtn">Close Admin Demo</button>
+        </div>
+        <div class="admin-row">
+          <input id="newFileName" placeholder="File title (e.g. Chapter 2 Notes)" />
+          <select id="newFileType" style="padding:11px;border:1px solid var(--line);border-radius:10px"><option value="pdf">PDF</option><option value="image">Photo</option></select>
+          <button class="primary" id="addSampleBtn">Add Sample Card</button>
+        </div>
+        <p class="fineprint">Demo only: this does not upload real files or save changes after the page is refreshed.</p>
+      </section>
+    </section>
+  </main>
+
+  <footer>© 2026 Bhim PDF Viewer · Education for everyone</footer>
+
+  <div class="modal-wrap" id="loginModal">
+    <div class="modal">
+      <div class="logo">B</div>
+      <div class="eyebrow" style="color:#5368c9;margin-top:18px">WELCOME TO THE STUDY LIBRARY</div>
+      <h2>Visitor Login</h2>
+      <p>Enter your name and roll number to continue to the educational resources.</p>
+      <form id="loginForm">
+        <label class="field">Your Name<input id="visitorName" required maxlength="80" placeholder="Enter your full name" autocomplete="name" /></label>
+        <label class="field">Roll Number<input id="rollNumber" required maxlength="30" placeholder="Enter your roll number" /></label>
+        <button class="primary wide" type="submit">LOGIN & CONTINUE →</button>
+      </form>
+      <p class="fineprint">This is a visual demo. Visitor details are not saved or sent to a server in this HTML prototype.</p>
+    </div>
+  </div>
+
+  <div class="modal-wrap hidden" id="viewerModal">
+    <div class="modal viewer-modal">
+      <div class="viewer-head"><div><div class="eyebrow" style="color:#5368c9">ONLINE VIEWER</div><h2 id="viewerTitle" style="margin:7px 0 0">Document Preview</h2></div><button class="close" id="closeViewer">✕ Close</button></div>
+      <div class="viewer-canvas" id="viewerCanvas"></div>
+      <div class="viewer-controls">
+        <button class="outline" id="prevPage">← Previous</button><span class="pill" id="pageStatus">Page 1 of 2</span><button class="outline" id="nextPage">Next →</button>
+        <button class="outline" id="zoomOut">− Zoom</button><button class="outline" id="zoomIn">+ Zoom</button>
+      </div>
+      <p class="fineprint">Sample preview only. Real PDF rendering will be connected in the next development step.</p>
+    </div>
+  </div>
+
+  <script>
+    const sampleFiles = [
+      {id:1,name:"Science Chapter 2 — Notes",type:"pdf",size:"2.4 MB",views:128,description:"Study notes and key concepts"},
+      {id:2,name:"Biology — Important Questions",type:"pdf",size:"1.8 MB",views:96,description:"Revision questions for students"},
+      {id:3,name:"Nature and Environment",type:"image",size:"860 KB",views:74,description:"Educational reference photo"},
+      {id:4,name:"Computer Safety Guide",type:"pdf",size:"3.1 MB",views:63,description:"Learn safe internet practices"},
+      {id:5,name:"Marigold Flower Study",type:"image",size:"1.2 MB",views:51,description:"Botany photo reference"},
+      {id:6,name:"Mathematics Practice Sheet",type:"pdf",size:"950 KB",views:42,description:"Practice problems and examples"}
+    ];
+    let activeFilter = "all", loggedIn = false, visitor = null, currentPage = 1, zoom = 1, currentFile = null;
+    const $ = id => document.getElementById(id);
+    function renderFiles(){
+      const query = $("searchInput").value.trim().toLowerCase();
+      const files = sampleFiles.filter(f => (activeFilter==="all" || f.type===activeFilter) && f.name.toLowerCase().includes(query));
+      $("fileGrid").innerHTML = files.length ? files.map(f => `
+        <article class="file-card">
+          <div class="file-preview">
+            <span class="type-tag">${f.type==="pdf"?"PDF DOCUMENT":"PHOTO"}</span>
+            ${f.type==="pdf" ? '<div class="pdf-icon"><span>PDF</span><small>DOCUMENT</small></div>' : '<div class="photo-preview">🌿</div>'}
+          </div>
+          <div class="file-meta"><div class="mini-icon ${f.type==="image"?"img":""}">${f.type==="pdf"?"PDF":"IMG"}</div><div style="min-width:0"><h3 title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</h3><p>${f.size} · ${escapeHtml(f.description)}</p></div></div>
+          <div class="card-bottom"><span class="views">◉ ${f.views} views</span><button class="view-btn" onclick="openViewer(${f.id})">View Online ↗</button></div>
+        </article>`).join("") : '<div class="empty">No files found. Try another search.</div>';
+    }
+    function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function showLogin(){ $("loginModal").classList.remove("hidden"); }
+    $("loginForm").addEventListener("submit",e=>{
+      e.preventDefault(); visitor={name:$("visitorName").value.trim(),roll:$("rollNumber").value.trim()};
+      if(!visitor.name||!visitor.roll)return;
+      loggedIn=true; $("loginModal").classList.add("hidden"); $("visitorBadge").textContent=visitor.name+" · Roll "+visitor.roll;
+      $("loginTopBtn").textContent="Change Visitor"; alert("Welcome, "+visitor.name+"! This is a demo; your visit is not saved to a database.");
+    });
+    $("loginTopBtn").addEventListener("click",showLogin);
+    $("heroLoginBtn").addEventListener("click",showLogin);
+    $("adminTopBtn").addEventListener("click",()=>{const pass=prompt("Demo Admin access. Enter demo code: VIEWER123");if(pass==="VIEWER123"){$("adminPanel").classList.remove("hidden");$("adminPanel").scrollIntoView({behavior:"smooth"});}else if(pass!==null)alert("Incorrect demo code.");});
+    $("adminLogoutBtn").addEventListener("click",()=>$("adminPanel").classList.add("hidden"));
+    document.querySelectorAll(".filter").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");activeFilter=btn.dataset.filter;renderFiles();}));
+    $("searchBtn").addEventListener("click",renderFiles());
+    $("searchInput").addEventListener("input",renderFiles);
+    $("addSampleBtn").addEventListener("click",()=>{const name=$("newFileName").value.trim();if(!name){alert("Please enter a title.");return;}sampleFiles.unshift({id:Date.now(),name,type:$("newFileType").value,size:"Demo file",views:0,description:"Admin-added sample card"});$("newFileName").value="";renderFiles();alert("Sample card added. No real file was uploaded.");});
+    function openViewer(id){if(!loggedIn){showLogin();return;}currentFile=sampleFiles.find(f=>f.id===id);currentPage=1;zoom=1;$("viewerTitle").textContent=currentFile.name;$("viewerModal").classList.remove("hidden");drawPreview();}
+    window.openViewer=openViewer;
+    function drawPreview(){
+      $("pageStatus").textContent="Page "+currentPage+" of 2";
+      $("prevPage").disabled=currentPage===1;$("nextPage").disabled=currentPage===2;
+      $("viewerCanvas").innerHTML=currentFile.type==="image"
+        ? '<div style="font-size:'+Math.round(90*zoom)+'px">🌿</div><p>Sample photo preview</p>'
+        : '<div class="demo-page" style="transform:scale('+zoom+');transform-origin:top center"><h3>'+escapeHtml(currentFile.name)+'</h3><p><strong>Educational Resource</strong></p><p>This is a sample viewer preview. In the connected version, the real PDF page will render here for online reading.</p><p>Use the page controls and zoom buttons to preview the interface.</p><hr><p style="text-align:center">Page '+currentPage+'</p></div>';
+    }
+    $("closeViewer").addEventListener("click",()=>$("viewerModal").classList.add("hidden"));
+    $("prevPage").addEventListener("click",()=>{currentPage=Math.max(1,currentPage-1);drawPreview();});
+    $("nextPage").addEventListener("click",()=>{currentPage=Math.min(2,currentPage+1);drawPreview();});
+    $("zoomIn").addEventListener("click",()=>{zoom=Math.min(1.4,zoom+.1);drawPreview();});
+    $("zoomOut").addEventListener("click",()=>{zoom=Math.max(.7,zoom-.1);drawPreview();});
+    $("viewerModal").addEventListener("click",e=>{if(e.target===$("viewerModal"))$("viewerModal").classList.add("hidden");});
+    renderFiles();
+  </script>
+</body>
+</html>
