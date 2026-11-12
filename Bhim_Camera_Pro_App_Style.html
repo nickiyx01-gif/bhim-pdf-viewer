@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#050505">
+<title>Bhim Camera Pro</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#050505;color:#fff;font-family:Arial,sans-serif}
+body{overflow:hidden}.app{height:100dvh;display:flex;flex-direction:column;background:#050505}
+.top{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#080808}
+.brand{font-size:15px;font-weight:800;letter-spacing:1.4px}.top button,.tool button{background:#222;color:#fff;border:0;border-radius:22px;padding:9px 13px}
+.preview{position:relative;flex:1;min-height:0;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#video{width:100%;height:100%;object-fit:cover;display:none}
+#placeholder{position:absolute;text-align:center;padding:25px;color:#ddd}
+#placeholder .lens{font-size:55px;margin-bottom:12px}
+#status{font-size:13px;color:#c8c8c8;line-height:1.5;margin-top:9px}
+.live{position:absolute;top:14px;left:14px;background:#0009;border-radius:18px;padding:7px 10px;font-size:11px;letter-spacing:1px}
+.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3434;margin-right:6px}
+.zoomrow{position:absolute;bottom:15px;left:0;right:0;display:flex;justify-content:center;gap:13px;align-items:center}
+.zoomrow button{border:0;border-radius:25px;background:#0009;color:#fff;padding:10px 14px}
+.bottom{background:#080808;padding:12px 16px calc(14px + env(safe-area-inset-bottom))}
+.modes{display:flex;justify-content:center;gap:24px;font-size:12px;color:#aaa;margin:2px 0 14px}
+.modes span.active{color:#ffd66b;font-weight:bold}
+.controls{display:flex;align-items:center;justify-content:space-around}
+.round{width:48px;height:48px;border:0;border-radius:50%;background:#292929;color:white;font-size:19px}
+.shutter{width:72px;height:72px;border:5px solid #aaa;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #333}
+.shutter:active{transform:scale(.94)}
+.record{background:#b51e2b}
+.tools{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.tools button{white-space:nowrap;border:1px solid #333;border-radius:20px;padding:9px 12px;background:#191919;color:#eee;font-size:12px}
+.settings{background:#101010;padding:10px 16px;max-height:29vh;overflow:auto}
+.settingrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0;font-size:12px;color:#ddd}
+input[type=range]{width:52%;accent-color:#ffd66b}
+select{background:#252525;color:#fff;border:1px solid #444;border-radius:8px;padding:8px;max-width:58%}
+#permissionBtn{background:#ffd66b;color:#111;font-weight:bold;border:0;border-radius:25px;padding:13px 22px;margin-top:12px}
+.hidden{display:none!important}
+#gallery{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="top">
+  <button onclick="toggleSettings()" aria-label="Settings">⚙</button>
+  <div class="brand">BHIM CAMERA PRO</div>
+  <button onclick="switchCamera()">↻</button>
+ </div>
+
+ <div class="preview">
+  <video id="video" autoplay playsinline muted></video>
+  <div id="placeholder">
+   <div class="lens">◎</div>
+   <strong>BHIM CAMERA PRO</strong>
+   <div id="status">कैमरा अनुमति का इंतज़ार है…</div>
+   <button id="permissionBtn" onclick="startCamera()">ALLOW CAMERA / START</button>
+  </div>
+  <div class="live hidden" id="live"><i></i>LIVE</div>
+  <div class="zoomrow hidden" id="zoomButtons">
+   <button onclick="setZoom(1)">1×</button>
+   <button onclick="setZoom(2)">2×</button>
+   <button onclick="setZoom(3)">3×</button>
+  </div>
+ </div>
+
+ <div class="bottom">
+  <div class="modes"><span class="active">PHOTO</span><span>VIDEO</span><span>PORTRAIT</span></div>
+  <div class="controls">
+   <button class="round" onclick="takePhoto()" title="Gallery">▧</button>
+   <button class="shutter" onclick="takePhoto()" aria-label="Take photo"></button>
+   <button class="round record" id="recordBtn" onclick="toggleRecord()">●</button>
+  </div>
+  <div class="tools">
+   <button onclick="setFilter('none')">Original</button>
+   <button onclick="setFilter('contrast(1.15) saturate(1.2)')">Cinematic</button>
+   <button onclick="setFilter('sepia(.35) contrast(1.1)')">Vintage</button>
+   <button onclick="setFilter('grayscale(1) contrast(1.2)')">B&W</button>
+   <button onclick="toggleSettings()">More settings</button>
+  </div>
+ </div>
+
+ <div class="settings hidden" id="settings">
+  <div class="settingrow"><span>Zoom</span><input id="zoom" type="range" min="1" max="1" step=".1" value="1"><b id="zoomValue">1×</b></div>
+  <div class="settingrow"><span>Soft blur</span><input id="blur" type="range" min="0" max="3" step=".1" value="0"><b id="blurValue">0</b></div>
+  <div class="settingrow"><span>Resolution</span>
+   <select id="resolution"><option value="1920x1080">1080p</option><option value="1280x720">720p</option><option value="3840x2160">4K if supported</option></select>
+  </div>
+  <div class="settingrow"><span>Camera status</span><b id="detailStatus">Not started</b></div>
+  <button onclick="stopCamera()" style="width:100%;padding:10px;border:0;border-radius:9px;background:#292929;color:white">Turn camera off</button>
+ </div>
+</div>
+<div id="gallery"></div>
+
+<script>
+const video=document.getElementById('video');
+const statusEl=document.getElementById('status');
+const placeholder=document.getElementById('placeholder');
+const live=document.getElementById('live');
+const zoom=document.getElementById('zoom');
+const blur=document.getElementById('blur');
+let stream=null,track=null,recorder=null,chunks=[],facing='environment',filterValue='none';
+
+function secureReady(){
+ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+async function startCamera(){
+ try{
+  if(!secureReady()){
+   statusEl.textContent='इस HTML को file:// से खोलने पर कैमरा अनुमति नहीं मिल सकती। इसे HTTPS वेबसाइट या localhost पर खोलें।';
+   document.getElementById('detailStatus').textContent='HTTPS required';
+   return;
+  }
+  statusEl.textContent='कैमरा अनुमति माँगी जा रही है…';
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  const res=document.getElementById('resolution').value.split('x').map(Number);
+  stream=await navigator.mediaDevices.getUserMedia({
+   audio:true,
+   video:{facingMode:{ideal:facing},width:{ideal:res[0]},height:{ideal:res[1]}}
+  });
+  video.srcObject=stream;
+  await video.play();
+  track=stream.getVideoTracks()[0];
+  video.style.display='block';placeholder.classList.add('hidden');live.classList.remove('hidden');
+  document.getElementById('zoomButtons').classList.remove('hidden');
+  document.getElementById('detailStatus').textContent='Camera active';
+  const caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.zoom){
+   zoom.min=caps.zoom.min;zoom.max=caps.zoom.max;zoom.step=caps.zoom.step||.1;
+   zoom.value=Math.max(caps.zoom.min,Math.min(1,caps.zoom.max));zoom.disabled=false;
+  }else{zoom.min=1;zoom.max=1;zoom.value=1;zoom.disabled=true;}
+  updateZoomLabel();applyLook();
+ }catch(e){
+  statusEl.textContent=e.name==='NotAllowedError'?'Camera permission denied. Browser settings में Camera Allow करें।':'Camera error: '+e.message;
+  placeholder.classList.remove('hidden');
+  document.getElementById('detailStatus').textContent='Permission/error';
+ }
+}
+function switchCamera(){facing=facing==='environment'?'user':'environment';startCamera();}
+function stopCamera(){
+ if(recorder&&recorder.state==='recording')recorder.stop();
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=null;track=null;video.srcObject=null;video.style.display='none';
+ live.classList.add('hidden');document.getElementById('zoomButtons').classList.add('hidden');
+ placeholder.classList.remove('hidden');statusEl.textContent='कैमरा बंद है। चालू करने के लिए ALLOW CAMERA / START दबाएँ।';
+ document.getElementById('detailStatus').textContent='Not started';
+}
+function setZoom(v){
+ if(!track)return;
+ const target=Math.min(Number(zoom.max),Math.max(Number(zoom.min),v));
+ zoom.value=target;applyZoom();
+}
+async function applyZoom(){
+ updateZoomLabel();
+ if(track&&zoom.max>zoom.min){
+  try{await track.applyConstraints({advanced:[{zoom:Number(zoom.value)}]});}catch(e){}
+ }
+}
+function updateZoomLabel(){document.getElementById('zoomValue').textContent=Number(zoom.value).toFixed(1)+'×';}
+zoom.addEventListener('input',applyZoom);
+blur.addEventListener('input',()=>{document.getElementById('blurValue').textContent=blur.value;applyLook();});
+function setFilter(f){filterValue=f;applyLook();}
+function currentFilter(){return (filterValue==='none'?'':filterValue+' ')+(Number(blur.value)>0?'blur('+blur.value+'px)':'');}
+function applyLook(){video.style.filter=currentFilter();}
+function takePhoto(){
+ if(!stream||!video.videoWidth){alert('पहले कैमरा चालू करें');return;}
+ const c=document.createElement('canvas');c.width=video.videoWidth;c.height=video.videoHeight;
+ const ctx=c.getContext('2d');ctx.filter=currentFilter();ctx.drawImage(video,0,0,c.width,c.height);
+ c.toBlob(blob=>{
+  if(!blob)return;
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='Bhim_Camera_'+Date.now()+'.jpg';a.click();
+ },'image/jpeg',.95);
+}
+function toggleRecord(){
+ if(!stream){alert('पहले कैमरा चालू करें');return;}
+ if(!window.MediaRecorder){alert('इस ब्राउज़र में रिकॉर्डिंग समर्थित नहीं है');return;}
+ if(recorder&&recorder.state==='recording'){recorder.stop();return;}
+ const c=document.createElement('canvas');c.width=video.videoWidth;c.height=video.videoHeight;
+ const ctx=c.getContext('2d');let raf;
+ function draw(){if(!recorder||recorder.state!=='recording')return;ctx.filter=currentFilter();ctx.drawImage(video,0,0,c.width,c.height);raf=requestAnimationFrame(draw);}
+ const out=c.captureStream(30);stream.getAudioTracks().forEach(t=>out.addTrack(t));
+ const type=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+ try{recorder=new MediaRecorder(out,{mimeType:type});}catch(e){alert(e.message);return;}
+ chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+ recorder.onstop=()=>{cancelAnimationFrame(raf);const blob=new Blob(chunks,{type:recorder.mimeType});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Bhim_Camera_Video.webm';a.click();document.getElementById('recordBtn').textContent='●';out.getTracks().forEach(t=>t.stop());};
+ recorder.start();draw();document.getElementById('recordBtn').textContent='■';
+}
+function toggleSettings(){document.getElementById('settings').classList.toggle('hidden');}
+
+// Attempt permission request on page load when served from a secure origin.
+// Browsers may block or defer this; the visible START button remains the reliable fallback.
+window.addEventListener('load',()=>{
+ if(secureReady()){
+  statusEl.textContent='कैमरा अनुमति माँगी जा रही है…';
+  startCamera();
+ }else{
+  statusEl.textContent='कैमरा चालू करने के लिए START दबाएँ। HTTPS वेबसाइट जरूरी है।';
+ }
+});
+</script>
+</body>
+</html>
